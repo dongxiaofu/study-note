@@ -1,0 +1,500 @@
+*******************
+自己动手写Web服务器
+*******************
+
+功能点
+======
+
+请求方式
+----------
+
+GET请求
+
+HEAD请求
+
+POST请求
+
+PUT请求
+
+DELETE请求
+
+状态码
+--------
+
+200
+
+301
+
+404
+
+501
+
+502
+
+503
+
+504
+
+101
+
+协议
+------
+
+websocket协议
+
+功能
+-----
+
+静态资源服务器
+
+动态资源服务器
+
+负载均衡
+
+access_log
+
+error_log
+
+服务器配置文件
+
+多站点配置
+
+需解决的问题
+=============
+
+接收Post请求数据
+-----------------
+
+GET请求数据，将url去掉域名后，从剩余部分获取数据。
+
+POST请求，数据在请求体中，服务器如何获取？
+
+返回数据给客户端
+-----------------
+
+请求头
+
+.. code-block:: text
+
+	GET /games/cf/UploadFiles/201608/201608111512472651.jpg HTTP/1.1
+	Host: image.uuu9.com
+	Connection: keep-alive
+	Pragma: no-cache
+	Cache-Control: no-cache
+	User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36
+	Accept: image/webp,image/apng,image/*,*/*;q=0.8
+	Referer: http://cf.uuu9.com/201608/1341506.shtml
+	Accept-Encoding: gzip, deflate
+	Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7
+	Cookie: UM_distinctid=16e9b1ba74612f-065eae30e48224-3964720e-1fa400-16e9b1ba747112; tacc=c; Hm_lvt_9160218893e4062b6920339382e0adef=1574560311; Hm_lpvt_9160218893e4062b6920339382e0adef=1574560311; __utma=197026600.768067230.1574560312.1574560312.1574560312.1; __utmc=197026600; __utmz=197026600.1574560312.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utmt=1; __utmb=197026600.1.10.1574560312
+
+
+响应头
+
+.. code-block:: text
+
+	HTTP/1.1 200 OK
+	Server: Tengine
+	Content-Type: image/jpeg
+	Content-Length: 2305
+	Connection: keep-alive
+	Content-Location: http://image.uuu9.com/games/cf/UploadFiles/201608/201608111512472651.jpg
+	Last-Modified: Wed, 14 Aug 2019 18:16:45 GMT
+	Accept-Ranges: bytes
+	ETag: "1c43506ecc52d51:70d2"
+	X-Powered-By: ASP.NET
+	Date: Thu, 10 Oct 2019 02:06:39 GMT
+	Ali-Swift-Global-Savetime: 1570673194
+	Via: cache2.l2cn2315[0,200-0,H], cache9.l2cn2315[2,0], cache12.cn1366[0,200-0,H], cache20.cn1366[1,0]
+	Age: 3887139
+	X-Cache: HIT TCP_MEM_HIT dirn:12:869276320
+	X-Swift-SaveTime: Fri, 11 Oct 2019 12:38:08 GMT
+	X-Swift-CacheTime: 31104000
+	Timing-Allow-Origin: *
+	EagleId: 0e1d28a815745603384606906e
+
+
+.. note::
+
+	按照HTTP协议要求，返回非实体体数据（即响应行 + 首部行)，如何返回实体体数据？ 
+
+临时
+======
+
+静态服务器
+-----------
+
+根据请求头中的 GET /games/cf/UploadFiles/201608/201608111512472651.jpg HTTP/1.1 获取文件在服务器上的地址，读取到文件，返回数据给客户端。
+
+.. note::
+
+	请求头 + 实体体，实体体用何种格式数据返回呢？是文本还是二进制？还是直接用Java的方法写入socket就不必理会了？
+
+动态服务器
+------------
+
+根据请求头中的 GET /games/cf/UploadFiles/201608/201608111512472651.jpg HTTP/1.1 获取文件的后缀，比如 .php，就把该请求转发到对应的CGI应用去处理。
+
+.. note::
+
+	如果文件后缀被重写后，如何根据文件后缀识别该用哪种CGI应用程序处理？
+
+先实现的功能
+-----------
+
+正常处理静态请求
+
+正常处理未重写的动态请求
+
+浏览器页面正常显示网页内容，请求头和响应头都正常，但是响应数据中没有实体体数据，并且 chrome 出现下面的提示
+CAUTION:request is not finished yet!
+
+解决：响应头中设置了文件的 Content-Length:32
+
+
+http://localhost:2000/favicon.ico
+
+所谓favicon，即Favorites Icon的缩写，顾名思义，便是其可以让浏览器的收藏夹中除显示相应的标题外，还以图标的方式区别不同的网站。当然，这不是Favicon的全部，根据浏览器的不同，Favicon显示也有所区别：在大多数主流浏览器如FireFox和Internet Explorer (5.5及以上版本)中，favicon不仅在收藏夹中显示，还会同时出现在地址栏上，这时用户可以拖曳favicon到桌面以建立到网站的快捷方式；除此之外，标签式浏览器甚至还有不少扩展的功能，如FireFox甚至支持动画格式的favicon等。
+
+网页上调用
+编辑
+浏览器调用favicon的原理是首先在网页所在目录寻找favicon.ico文件，如果没有找到就去网站的根目录寻找。所以最简单的方法就是将制作好的favicon文件命名为favicon.ico然后上传到网站的根目录下。
+如果您需要将Favicon.ico放到其他目录下，或者希望让不同的网页显示不同的Favicon，就需要在网页Html文件中做设定了，具体设置也很简单，在Html中的<head>部分加入如下的代码：
+<link rel=”icon” href=”/dir/favicon.ico” mce_href=”/dir/favicon.ico” type=”image/x-icon”>
+<link rel=”shortcut icon” href=”/dir/favicon.ico” mce_href=”/dir/favicon.ico” type=”image/x-icon”>
+<link rel="icon" href="animated_favicon1.gif" type="image/gif" >
+含义：在浏览器标签中显示favicon，在收藏夹中显示favicon。
+除此之外，Firefox还支持GIF动画格式的Favicon,使用方法如下:
+首先制作一个16*16的gif动画,然后在html代码<head></head>中加入如下代码:
+程序代码 <link rel="shortcut icon" href="favicon.ico" >
+<link rel="icon" href="animated_favicon.gif" type="image/gif" >即可。
+
+并发请求，第一个线程输出数据后仍然长时间运行，原因是没有关闭很多文件流，就是下面这些，将首字母变为大写，就是对应的class
+
+fileInputStream.close();
+                bufferedReader.close();
+                inputStream.close();
+                outputStream.close();
+                socket.close();
+
+
+对这个问题，调试非常低效，我想到的原因：
+
+1.对不同文件（HTML和图片），采用的读写方式不对
+
+在这个思路不断尝试
+
+解决：
+
+看网上别人的代码，发现少了close。
+
+之前，我单独关闭过socket，可是报错。这是基础问题。
+
+获取String的字节数
+
+不是使用 str.length()，而是
+
+byte[] valueBuff = str.getBytes();
+int valueLength = valueBuff.length;
+
+POST Content-Type: application/x-www-form-urlencoded 已经实现
+
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryJ7JMPOAz6uo6BsDt
+
+如何接收 entity body
+
+curl 'http://dev.cg.com/tool/upload.php' -X POST -H 'Connection: keep-alive' -H 'Content-Length: 254195' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'Origin: http://localhost:2000' -H 'Upgrade-Insecure-Requests: 1' -H 'Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryR9YxXZi7K1GGeVey' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3' -H 'Referer: http://localhost:2000/form.html' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7' --compressed --insecure
+
+
+常用HTTP状态码权威资料
+
+《HTTP权威指南》P68
+
+HTTP请求头实体
+
+《HTTP权威指南》P358
+
+解析 http 请求发送的数据
+
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryw39jZm5VwyDlFWfz
+
+
+10
+	
+0x0A
+	
+LF (NL line feed, new line)
+	
+换行键
+
+13
+	
+0x0D
+	
+CR (carriage return)
+	
+回车键
+
+HTTP 报文中，行分割符的标准是 回车 + 换行，即 13 + 10
+
+以字节为单位，读取数据。
+第一个字节是字母，这是一行的开始，一直读到第一个CR，这是一行的结束。
+获取一行数据后，从中提取 boundary
+获取第一个LF后，剩下的数据，都是 entity。
+仍然是以字节为单位，读取数据。
+遇到数据是boundary后，读取数据类型，只处理图片等数据。处理的时候，可以更换读取数据的单位。
+
+被坑死
+/**
+     * Tests if this string ends with the specified suffix.
+     *
+     * @param   suffix   the suffix.
+     * @return  {@code true} if the character sequence represented by the
+     *          argument is a suffix of the character sequence represented by
+     *          this object; {@code false} otherwise. Note that the
+     *          result will be {@code true} if the argument is the
+     *          empty string or is equal to this {@code String} object
+     *          as determined by the {@link #equals(Object)} method.
+     */
+    public boolean endsWith(String suffix) {
+        return startsWith(suffix, value.length - suffix.value.length);
+    }
+
+分解出图片数据后，图片仍然不正常===》是不是没有正确提取出图片数据，少了或多加了其他东西？不好验证
+
+验证方法，简化问题
+
+1>能不能分解出简单的数据
+
+
+将数据记录到日志中，然后去掉HTTP的分隔符和请求头等信息，图片仍然不能正常显示。
+
+调试的过程，思路混乱，不清晰，怎么办？智力水平太差，心算能力不强吗？
+
+打草稿吧
+
+进入实体部分
+
+POST /post.html HTTP/1.1
+H
+
+25个字节
+
+上传的文件存储起来，其他数据，模仿在PHP中看到的那样
+
+$_FILES
+
+Error:(3, 36) java: 程序包org.junit.jupiter.api不存在
+
+解决：将 /Users/cg/data/code/wheel/java/demo/demo.iml 中的
+
+<orderEntry type="module-library" scope="TEST">
+
+改为
+
+<orderEntry type="module-library">
+
+问题：
+
+浏览器不断开连接，一直是pending;三个文件上传框的name一样，fileMeta不正确
+
+解决：
+
+1>可能是因为服务器没有给出响应报文；可能是打开的流没有关闭
+
+都不是。
+
+原因是，上传了文件，去掉文件上传框后，正常了。
+
+
+真正原因，服务器接收上传文件完毕后，要立即给浏览器发送响应报文，否则，浏览器会继续向服务器发送数据。
+
+
+POST /post.html HTTP/1.1
+Host: localhost:2000
+Connection: keep-alive
+Content-Length: 44
+Pragma: no-cache
+Cache-Control: no-cache
+Origin: http://dev.cg.com
+Upgrade-Insecure-Requests: 1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary8k8SB2QCyOcBOigl
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36
+Sec-Fetch-User: ?1
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Referer: http://dev.cg.com/tool/form.html
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7
+
+
+HTTP/1.1 200 OK
+Content-Length: 5
+
+HTTP/1.1 200 OK
+Content-Length: 5
+Transfer-Encoding: chunked
+
+HTTP/1.1 200 OK
+Transfer-Encoding: chunked
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+
+
+
+---------
+
+下面是正常的
+
+POST /tool/upload.php HTTP/1.1
+Host: dev.cg.com
+Connection: keep-alive
+Content-Length: 253990
+Pragma: no-cache
+Cache-Control: no-cache
+Origin: http://dev.cg.com
+Upgrade-Insecure-Requests: 1
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryDw8WwPII8VQVwUkb
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3
+Referer: http://dev.cg.com/tool/form2.html
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7
+
+HTTP/1.1 200 OK
+Server: nginx/1.15.6
+Date: Mon, 25 Nov 2019 13:42:03 GMT
+Content-Type: text/html; charset=UTF-8
+Transfer-Encoding: chunked
+Connection: keep-alive
+X-Powered-By: PHP/7.2.12
+
+
+问题
+POST http://localhost:2000/post.html net::ERR_INVALID_CHUNKED_ENCODING 200 (OK)
+
+原因是什么？
+
+POST http://localhost:2000/post.html net::ERR_CONNECTION_RESET 200 (OK)
+
+
+
+
+
+2>步骤多一点：如果name相同，此name的值是一个数组或其他合适的数据结构
+
+
+
+inet 192.168.31.29 netmask 0xffffff00 broadcast 192.168.31.255
+
+查看dns
+
+scutil --dns
+
+192.168.31.1
+
+不可用start
+ route add 本机ip mask 255.255.255.255 网关ip
+ route add 192.168.31.29 netmask 255.255.255.0 192.168.31.1 
+
+ route add -p 192.168.31.29 mask 255.255.255.0 192.168.31.1
+
+ sudo route -n add -net 192.168.31.29 -netmask 255.255.255.0 192.168.31.1
+
+ route: writing to routing socket: File exists
+add net 192.168.31.29: gateway 192.168.31.1: File exists
+
+不可用end
+
+ 抓包
+
+ ip.dst == 192.168.31.29 && tcp.port == 80 && http
+
+ mac 上可用的命令
+
+ 2、输入以下指令
+
+netstat -rn    --查看路由表
+
+route get 0.0.0.0 --获取默认路由
+
+sudo route delete 0.0.0.0    --删除默认路由
+
+sudo route add -net 0.0.0.0 192.168.1.1    --添加公网网关
+
+sudo route add -net 166.0.0.0 166.6.66.254    --添加内网网关
+
+…or create a new repository on the command line
+echo "# java-web-server" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin https://github.com/gangganghong/java-web-server.git
+git push -u origin master
+…or push an existing repository from the command line
+git remote add origin https://github.com/gangganghong/java-web-server.git
+git push -u origin master
+
+打开的流，何时关闭才可以？
+
+琐粹的问题，想不明白。但是，不用想，也可以规避这个错误。这是智商低的表现吗？
+
+POST/GET这类信息，直接使用 System.getenv() 获取（待验证）。
+
+如何实现：将HTTP请求，转发给幕后的PHP？
+
+我向PHP进程发送数据，没有收到任何回复。
+
+wireshark 过滤端口
+
+tcp.dstport==9000 and tcp.srcport==57650
+
+连接 php，报错
+
+java.net.SocketException: Connection reset
+
+发送数据给php-fpm后，再建立一个socket连接读数据，但是读取不到任何数据。
+
+web服务器是与PHP直接IPC，还是通过环境变量交互？
+
+£(SCRIPT_FILENAME/Users/cg/data/www/cg/tool/parseText.phpQUERY_STRINGREQUEST_METHODGETCONTENT_TYPECONTENT_LENGTHSCRIPT_NAME/tool/parseText.phpREQUEST_URI/tool/parseText.phpDOCUMENT_URI/tool/parseText.php
+DOCUMENT_ROOT/Users/cg/data/www/cgSERVER_PROTOCOLHTTP/1.1REQUEST_SCHEMEhttpGATEWAY_INTERFACECGI/1.1SERVER_SOFTWAREnginx/1.15.6	REMOTE_ADDR127.0.0.1REMOTE_PORT63780	SERVER_ADDR127.0.0.1SERVER_PORT80
+SERVER_NAMEdev.cg.comREDIRECT_STATUS200	
+HTTP_HOSTdev.cg.comRHTTP_USER_AGENTMozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:70.0) Gecko/20100101 Firefox/70.0?HTTP_ACCEPTtext/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8;HTTP_ACCEPT_LANGUAGEzh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+HTTP_ACCEPT_ENCODINGgzip, deflateHTTP_REFERERhttp://dev.cg.com/tool/
+HTTP_CONNECTIONkeep-aliveHTTP_UPGRADE_INSECURE_REQUESTS1HTTP_PRAGMAno-cacheHTTP_CACHE_CONTROLno-cache
+
+
+mac
+xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun
+
+解决办法：
+
+在终端输入，会安装xcrun
+
+xcode-select --install
+
+
+
+纯java实现FastCGI协议模拟nginx直接连接php-fpm通讯
+
+这哥们真是太厉害了！
+
+https://blog.csdn.net/c5113620/article/details/88750098
+
+写得非常好的编程博客
+
+https://me.csdn.net/liushengxi_root
+
+
+
+
+
+
+
+
+
+
+
+

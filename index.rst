@@ -3,14 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to java-study's documentation!
+造轮子
 ======================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
-
-
+	
+   0000001
+   0000002
+   0000003
+   0000004
 
 Indices and tables
 ==================
