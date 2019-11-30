@@ -487,11 +487,21 @@ https://blog.csdn.net/c5113620/article/details/88750098
 
 https://me.csdn.net/liushengxi_root
 
+fastcgi资料
+
+纯java实现FastCGI协议模拟nginx直接连接php-fpm通讯
+
+https://blog.csdn.net/c5113620/article/details/88750098
+
+fastcgi协议原始资料
+
+http://www.fastcgi.com/devkit/doc/fcgi-spec.html#S5%20%E6%88%B3%E8%BF%99%E9%87%8C
 
 
 
+fastcgi协议分析与实例
 
-
+https://blog.csdn.net/Shreck66/article/details/50355729
 
 
 
